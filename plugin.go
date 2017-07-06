@@ -17,9 +17,10 @@ type Plugin interface {
 }
 
 type RunningPlugin struct {
-	Name    string
-	Plugin  Plugin
-	Work    func(*workers.Msg)
-	Enabled bool
-	Workers int
+	Name          string
+	Plugin        Plugin
+	Work          func(*workers.Msg)
+	Enabled       bool
+	Workers       int
+	WorkerRetries int
 }

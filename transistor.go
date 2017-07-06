@@ -128,18 +128,25 @@ func (t *Transistor) addPlugin(name string) error {
 		plugin.Process(event)
 	}
 
-	c := t.Config.Plugins[name].(map[string]interface{})
-	workerCount := 0
-	if c["workers"] != nil {
-		workerCount = c["workers"].(int)
+	wc := t.Config.Plugins[name].(map[string]interface{})
+	workersCount := 0
+	if wc["workers"] != nil {
+		workersCount = wc["workers"].(int)
+	}
+
+	wrc := t.Config.Plugins[name].(map[string]interface{})
+	workerRetriesCount := 0
+	if wrc["worker_retries"] != nil {
+		workerRetriesCount = wrc["worker_retries"].(int)
 	}
 
 	rp := &RunningPlugin{
-		Name:    name,
-		Plugin:  plugin,
-		Work:    work,
-		Enabled: false,
-		Workers: workerCount,
+		Name:          name,
+		Plugin:        plugin,
+		Work:          work,
+		Enabled:       false,
+		Workers:       workersCount,
+		WorkerRetries: workerRetriesCount,
 	}
 
 	t.Plugins = append(t.Plugins, rp)
@@ -181,7 +188,14 @@ func (t *Transistor) flusher() {
 								"event_name":  e.Name,
 								"plugin_name": plugin.Name,
 							})
-							workers.Enqueue(plugin.Name, "Event", e)
+
+							options := workers.EnqueueOptions{}
+							if plugin.WorkerRetries > 0 {
+								options.Retry = true
+								options.RetryCount = plugin.WorkerRetries
+							}
+
+							workers.EnqueueWithOptions(plugin.Name, "Event", e, options)
 						} else {
 							plugin.Plugin.Process(e)
 						}
@@ -208,7 +222,6 @@ func (t *Transistor) Run() error {
 	if t.Config.Queueing {
 		workers.Middleware = workers.NewMiddleware(
 			&workers.MiddlewareRetry{},
-			&workers.MiddlewareStats{},
 		)
 
 		workers.Logger = log.Instance()
