@@ -161,9 +161,9 @@ func (e *Event) Matches(name string) bool {
 	return false
 }
 
-func (e *Event) AddArtifact(key string, value interface{}, secret bool, source string) {
+func (e *Event) AddArtifact(key string, value interface{}, secret bool) {
 	artifact := Artifact{
-		Source: source,
+		Source: e.Key,
 		Key:    key,
 		Value:  value,
 		Secret: secret,
@@ -182,7 +182,17 @@ func (e *Event) AddArtifact(key string, value interface{}, secret bool, source s
 	}
 }
 
-func (e *Event) GetArtifact(key string, source string) (Artifact, error) {
+func (e *Event) GetArtifact(key string) (Artifact, error) {
+	for _, artifact := range e.Artifacts {
+		if strings.ToLower(artifact.Source) == strings.ToLower(e.Key) && strings.ToLower(artifact.Key) == strings.ToLower(key) {
+			return artifact, nil
+		}
+	}
+
+	return Artifact{}, errors.New(fmt.Sprintf("Artifact %s not found", key))
+}
+
+func (e *Event) GetArtifactFromSource(key string, source string) (Artifact, error) {
 	for _, artifact := range e.Artifacts {
 		if strings.ToLower(artifact.Source) == strings.ToLower(source) && strings.ToLower(artifact.Key) == strings.ToLower(key) {
 			return artifact, nil
