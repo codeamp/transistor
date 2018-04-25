@@ -32,16 +32,17 @@ type Caller struct {
 }
 
 type Artifact struct {
+	Source string      `json:"source"`
 	Key    string      `json:"key"`
 	Value  interface{} `json:"value"`
 	Secret bool        `json:"secret"`
 }
 
-func (a *Artifact) GetString() string {
+func (a *Artifact) String() string {
 	return a.Value.(string)
 }
 
-func (a *Artifact) GetInt() int {
+func (a *Artifact) Int() int {
 	i, err := strconv.Atoi(a.Value.(string))
 	if err != nil {
 		log.Error(err)
@@ -50,11 +51,11 @@ func (a *Artifact) GetInt() int {
 	return i
 }
 
-func (a *Artifact) GetStringMap() map[string]interface{} {
+func (a *Artifact) StringMap() map[string]interface{} {
 	return a.Value.(map[string]interface{})
 }
 
-func (a *Artifact) GetStringSlice() []interface{} {
+func (a *Artifact) StringSlice() []interface{} {
 	return a.Value.([]interface{})
 }
 
@@ -158,8 +159,9 @@ func (e *Event) Matches(name string) bool {
 	return false
 }
 
-func (e *Event) AddArtifact(key string, value interface{}, secret bool) {
+func (e *Event) AddArtifact(key string, value interface{}, secret bool, source string) {
 	artifact := Artifact{
+		Source: source,
 		Key:    key,
 		Value:  value,
 		Secret: secret,
@@ -178,9 +180,9 @@ func (e *Event) AddArtifact(key string, value interface{}, secret bool) {
 	}
 }
 
-func (e *Event) GetArtifact(key string) (Artifact, error) {
+func (e *Event) GetArtifact(key string, source string) (Artifact, error) {
 	for _, artifact := range e.Artifacts {
-		if artifact.Key == key {
+		if artifact.Source == source && artifact.Key == key {
 			return artifact, nil
 		}
 	}
