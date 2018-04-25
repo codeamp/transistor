@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	json "github.com/bww/go-json"
@@ -169,7 +170,7 @@ func (e *Event) AddArtifact(key string, value interface{}, secret bool, source s
 
 	exists := false
 	for i, _artifact := range e.Artifacts {
-		if _artifact.Key == key {
+		if strings.ToLower(_artifact.Key) == strings.ToLower(key) {
 			exists = true
 			e.Artifacts[i] = artifact
 		}
@@ -182,7 +183,7 @@ func (e *Event) AddArtifact(key string, value interface{}, secret bool, source s
 
 func (e *Event) GetArtifact(key string, source string) (Artifact, error) {
 	for _, artifact := range e.Artifacts {
-		if artifact.Source == source && artifact.Key == key {
+		if strings.ToLower(artifact.Source) == strings.ToLower(source) && strings.ToLower(artifact.Key) == strings.ToLower(key) {
 			return artifact, nil
 		}
 	}
