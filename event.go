@@ -17,6 +17,7 @@ import (
 
 type Event struct {
 	ID           uuid.UUID   `json:"id"`
+	Key          string      `json:"key"`
 	ParentID     uuid.UUID   `json:"parentId"`
 	Name         string      `json:"name"`
 	Payload      interface{} `json:"payload"`
