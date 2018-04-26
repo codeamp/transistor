@@ -33,7 +33,7 @@ type Caller struct {
 }
 
 type Artifact struct {
-	Source string      `json:"source"`
+	Source string      `json:"source,omitempty"`
 	Key    string      `json:"key"`
 	Value  interface{} `json:"value"`
 	Secret bool        `json:"secret"`
