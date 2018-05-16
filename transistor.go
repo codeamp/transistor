@@ -120,7 +120,7 @@ func (t *Transistor) addPlugin(name string) error {
 		event := Event{}
 		json.Unmarshal([]byte(e), &event)
 		if err := MapPayload(event.PayloadModel, &event); err != nil {
-			event.Error = fmt.Errorf("PayloadModel not found: %s. Did you add it to ApiRegistry?", event.PayloadModel)
+			log.Error(fmt.Sprintf("PayloadModel not found: %s. Did you add it to ApiRegistry?", event.PayloadModel))
 		}
 
 		//event.Dump()
@@ -181,10 +181,10 @@ func (t *Transistor) flusher() {
 			for _, plugin := range t.Plugins {
 				if plugin.Workers > 0 {
 					subscribedTo := plugin.Plugin.Subscribe()
-					if SliceContains(e.PayloadModel, subscribedTo) || SliceContains(e.Name, subscribedTo) {
+					if SliceContains(e.Name, subscribedTo) {
 						ev_handled = true
 						if t.Config.Queueing {
-							log.InfoWithFields("Enqueue event", log.Fields{
+							log.DebugWithFields("Enqueue event", log.Fields{
 								"event_name":  e.Name,
 								"plugin_name": plugin.Name,
 							})
@@ -208,7 +208,7 @@ func (t *Transistor) flusher() {
 			if t.TestEvents != nil {
 				t.TestEvents <- e
 			} else if !ev_handled {
-				log.InfoWithFields("Event not handled by any plugin", log.Fields{
+				log.WarnWithFields("Event not handled by any plugin", log.Fields{
 					"event_name": e.Name,
 				})
 				e.Dump()
@@ -311,7 +311,7 @@ func (t *Transistor) GetTestEvent(name string, timeout time.Duration) Event {
 	for e := range t.TestEvents {
 		matched, err := regexp.MatchString(name, e.Name)
 		if err != nil {
-			log.InfoWithFields("GetTestEvent regex match encountered an error", log.Fields{
+			log.ErrorWithFields("GetTestEvent regex match encountered an error", log.Fields{
 				"regex":  name,
 				"string": e.Name,
 				"error":  err,
@@ -322,12 +322,11 @@ func (t *Transistor) GetTestEvent(name string, timeout time.Duration) Event {
 			timer.Stop()
 			return e
 		}
-
-		log.DebugWithFields("GetTestEvent regex not matched", log.Fields{
-			"regex":  name,
-			"string": e.Name,
-		})
 	}
+
+	log.WarnWithFields("GetTestEvent regex not matched", log.Fields{
+		"regex": name,
+	})
 
 	return Event{}
 }

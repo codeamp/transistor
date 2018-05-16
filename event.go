@@ -12,16 +12,24 @@ import (
 
 	json "github.com/bww/go-json"
 	log "github.com/codeamp/logger"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
+type Action string
+type State string
+type EventName string
+
 type Event struct {
-	ID           uuid.UUID   `json:"id"`
-	ParentID     uuid.UUID   `json:"parentId"`
-	Name         string      `json:"name"`
+	ID       uuid.UUID `json:"id"`
+	ParentID uuid.UUID `json:"parentId"`
+	Name     string    `json:"name"`
+
+	Action       Action `json:"action"`
+	State        State  `json:"state"`
+	StateMessage string `json:"stateMessage"`
+
 	Payload      interface{} `json:"payload"`
 	PayloadModel string      `json:"payloadModel"`
-	Error        error       `json:"error"`
 	CreatedAt    time.Time   `json:"createdAt"`
 	Caller       Caller      `json:"caller"`
 	Artifacts    []Artifact  `json:"artifacts"`
@@ -60,42 +68,23 @@ func (a *Artifact) StringSlice() []interface{} {
 	return a.Value.([]interface{})
 }
 
-func name(payload interface{}) string {
-	s := reflect.ValueOf(payload)
-
-	if s.Kind() != reflect.Struct {
-		return reflect.TypeOf(payload).String()
-	}
-
-	name := reflect.TypeOf(payload).String()
-
-	f := s.FieldByName("Action")
-	if f.IsValid() {
-		action := f.String()
-		if action != "" {
-			name = fmt.Sprintf("%v:%v", name, action)
-		}
-	}
-
-	f = s.FieldByName("Slug")
-	if f.IsValid() {
-		slug := f.String()
-		if slug != "" {
-			name = fmt.Sprintf("%v:%v", name, slug)
-		}
-	}
-
-	return name
-}
-
-func NewEvent(payload interface{}, err error) Event {
+func NewEvent(event EventName, action Action, payload interface{}) Event {
 	event := Event{
 		ID:           uuid.NewV4(),
-		Name:         name(payload),
 		Payload:      payload,
-		PayloadModel: reflect.TypeOf(payload).String(),
-		Error:        err,
 		CreatedAt:    time.Now(),
+		Action:       action,
+		State:        state,
+		StateMessage: stateMessage,
+	}
+
+	if payload != nil {
+		event.PayloadModel = reflect.TypeOf(payload).String()
+
+		slug := reflect.ValueOf(payload)
+		event.Name = fmt.Sprintf("%s:%s:%s", event.PayloadModel, action, slug.FieldByName("Slug"))
+	} else {
+		event.Name = string(action)
 	}
 
 	// for debugging purposes
@@ -110,27 +99,10 @@ func NewEvent(payload interface{}, err error) Event {
 	return event
 }
 
-func (e *Event) NewEvent(payload interface{}, err error) Event {
-	event := Event{
-		ID:           uuid.NewV4(),
-		ParentID:     e.ID,
-		Name:         name(payload),
-		Payload:      payload,
-		PayloadModel: reflect.TypeOf(payload).String(),
-		Error:        err,
-		CreatedAt:    time.Now(),
-	}
-
-	// for debugging purposes
-	_, file, no, ok := runtime.Caller(1)
-	if ok {
-		event.Caller = Caller{
-			File:       file,
-			LineNumber: no,
-		}
-	}
-
-	return event
+func (e *Event) NewEvent(action Action, state State, stateMessage string, payload interface{}) Event {
+	event := NewEvent(action, state, stateMessage, payload)
+	event.ParentID = e.ID
+	return evt
 }
 
 func (e *Event) Dump() {
@@ -141,7 +113,7 @@ func (e *Event) Dump() {
 func (e *Event) Matches(name string) bool {
 	matched, err := regexp.MatchString(name, e.Name)
 	if err != nil {
-		log.InfoWithFields("Event regex match encountered an error", log.Fields{
+		log.ErrorWithFields("Event regex match encountered an error", log.Fields{
 			"regex":  name,
 			"string": e.Name,
 			"error":  err,
