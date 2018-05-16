@@ -68,9 +68,10 @@ func (a *Artifact) StringSlice() []interface{} {
 	return a.Value.([]interface{})
 }
 
-func NewEvent(event EventName, action Action, payload interface{}) Event {
+func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 	event := Event{
 		ID:           uuid.NewV4(),
+		Name:         eventName,
 		Payload:      payload,
 		CreatedAt:    time.Now(),
 		Action:       action,
@@ -80,11 +81,6 @@ func NewEvent(event EventName, action Action, payload interface{}) Event {
 
 	if payload != nil {
 		event.PayloadModel = reflect.TypeOf(payload).String()
-
-		slug := reflect.ValueOf(payload)
-		event.Name = fmt.Sprintf("%s:%s:%s", event.PayloadModel, action, slug.FieldByName("Slug"))
-	} else {
-		event.Name = string(action)
 	}
 
 	// for debugging purposes
