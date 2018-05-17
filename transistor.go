@@ -181,11 +181,11 @@ func (t *Transistor) flusher() {
 			for _, plugin := range t.Plugins {
 				if plugin.Workers > 0 {
 					subscribedTo := plugin.Plugin.Subscribe()
-					if SliceContains(e.Name, subscribedTo) {
+					if SliceContains(e.Event(), subscribedTo) {
 						ev_handled = true
 						if t.Config.Queueing {
 							log.DebugWithFields("Enqueue event", log.Fields{
-								"event_name":  e.Name,
+								"event_name":  e.Event(),
 								"plugin_name": plugin.Name,
 							})
 
@@ -297,7 +297,8 @@ func (t *Transistor) Stop() {
 }
 
 // GetTestEvent listens and returns requested event
-func (t *Transistor) GetTestEvent(name string, timeout time.Duration) Event {
+func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Duration) Event {
+	eventName = fmt.Sprintf("%s:%s", name, action)
 	// timeout in the case that we don't get requested event
 	timer := time.NewTimer(time.Second * timeout)
 	go func() {
@@ -309,7 +310,7 @@ func (t *Transistor) GetTestEvent(name string, timeout time.Duration) Event {
 	}()
 
 	for e := range t.TestEvents {
-		matched, err := regexp.MatchString(name, e.Name)
+		matched, err := regexp.MatchString(eventName, e.Event())
 		if err != nil {
 			log.ErrorWithFields("GetTestEvent regex match encountered an error", log.Fields{
 				"regex":  name,

@@ -22,7 +22,7 @@ type EventName string
 type Event struct {
 	ID       uuid.UUID `json:"id"`
 	ParentID uuid.UUID `json:"parentId"`
-	Name     string    `json:"name"`
+	Name     EventName `json:"name"`
 
 	Action       Action `json:"action"`
 	State        State  `json:"state"`
@@ -75,9 +75,11 @@ func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 		Payload:      payload,
 		CreatedAt:    time.Now(),
 		Action:       action,
-		State:        state,
-		StateMessage: stateMessage,
+		State:        State("running"),
+		StateMessage: "Waiting for event to run",
 	}
+
+	log.Info("Creating Event: ", event.Name)
 
 	if payload != nil {
 		event.PayloadModel = reflect.TypeOf(payload).String()
@@ -95,10 +97,17 @@ func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 	return event
 }
 
-func (e *Event) NewEvent(action Action, state State, stateMessage string, payload interface{}) Event {
-	event := NewEvent(action, state, stateMessage, payload)
+func (e *Event) NewEvent(eventName EventName, action Action, payload interface{}) Event {
+	event := NewEvent(eventName, action, payload)
 	event.ParentID = e.ID
-	return evt
+	event.State = State("running")
+	event.StateMessage = fmt.Sprintf("Running event '%s'", eventName)
+	return event
+}
+
+func (e *Event) SetState(state State, stateMessage string) {
+	e.State = state
+	e.StateMessage = stateMessage
 }
 
 func (e *Event) Dump() {
@@ -106,12 +115,16 @@ func (e *Event) Dump() {
 	log.Info(string(event))
 }
 
+func (e *Event) Event() string {
+	return fmt.Sprintf("%s:%s", e.Name, e.Action)
+}
+
 func (e *Event) Matches(name string) bool {
-	matched, err := regexp.MatchString(name, e.Name)
+	matched, err := regexp.MatchString(name, e.Event())
 	if err != nil {
 		log.ErrorWithFields("Event regex match encountered an error", log.Fields{
 			"regex":  name,
-			"string": e.Name,
+			"string": e.Event(),
 			"error":  err,
 		})
 	}
@@ -122,7 +135,7 @@ func (e *Event) Matches(name string) bool {
 
 	log.DebugWithFields("Event regex not matched", log.Fields{
 		"regex":  name,
-		"string": e.Name,
+		"string": e.Event(),
 	})
 
 	return false
