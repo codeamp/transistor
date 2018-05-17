@@ -75,11 +75,9 @@ func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 		Payload:      payload,
 		CreatedAt:    time.Now(),
 		Action:       action,
-		State:        State("running"),
+		State:        State("waiting"),
 		StateMessage: "Waiting for event to run",
 	}
-
-	log.Info("Creating Event: ", event.Name)
 
 	if payload != nil {
 		event.PayloadModel = reflect.TypeOf(payload).String()
@@ -133,10 +131,14 @@ func (e *Event) Matches(name string) bool {
 		return true
 	}
 
-	log.DebugWithFields("Event regex not matched", log.Fields{
-		"regex":  name,
-		"string": e.Event(),
-	})
+	// Not that important because there will be events that will
+	// fail without being an error condition because there will obviously
+	// be some events that do not match. Leaving here for future debugging, but disabling for sake of DEBUG channel
+	// ADB
+	// log.DebugWithFields("Event regex not matched", log.Fields{
+	// 	"regex":  name,
+	// 	"string": e.Event(),
+	// })
 
 	return false
 }

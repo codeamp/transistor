@@ -119,9 +119,6 @@ func (t *Transistor) addPlugin(name string) error {
 		e, _ := json.Marshal(message.Args())
 		event := Event{}
 		json.Unmarshal([]byte(e), &event)
-		if err := MapPayload(event.PayloadModel, &event); err != nil {
-			log.Error(fmt.Sprintf("PayloadModel not found: %s. Did you add it to ApiRegistry?", event.PayloadModel))
-		}
 
 		//event.Dump()
 
@@ -298,7 +295,7 @@ func (t *Transistor) Stop() {
 
 // GetTestEvent listens and returns requested event
 func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Duration) Event {
-	eventName = fmt.Sprintf("%s:%s", name, action)
+	eventName := fmt.Sprintf("%s:%s", name, action)
 	// timeout in the case that we don't get requested event
 	timer := time.NewTimer(time.Second * timeout)
 	go func() {
