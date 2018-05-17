@@ -19,6 +19,31 @@ type Action string
 type State string
 type EventName string
 
+func GetAction(s string) Action {
+	actions := []string{
+		"create",
+		"update",
+		"delete",
+		"status",
+	}
+
+	for _, action := range actions {
+		if s == action {
+			return Action(action)
+		}
+	}
+
+	errMsg := fmt.Sprintf("Action not found: '%s' ", s)
+	_, file, line, ok := runtime.Caller(1)
+	if ok {
+		errMsg += fmt.Sprintf("%s : ln %d", file, line)
+	}
+
+	log.Panic(errMsg)
+
+	return Action("unknown")
+}
+
 type Event struct {
 	ID       uuid.UUID `json:"id"`
 	ParentID uuid.UUID `json:"parentId"`
@@ -68,6 +93,18 @@ func (a *Artifact) StringSlice() []interface{} {
 	return a.Value.([]interface{})
 }
 
+func CreateEvent(eventName EventName, action Action, payload interface{}) Event {
+	return NewEvent(eventName, GetAction("create"), payload)
+}
+
+func UpdateEvent(eventName EventName, action Action, payload interface{}) Event {
+	return NewEvent(eventName, GetAction("update"), payload)
+}
+
+func DeleteEvent(eventName EventName, action Action, payload interface{}) Event {
+	return NewEvent(eventName, GetAction("delete"), payload)
+}
+
 func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 	event := Event{
 		ID:           uuid.NewV4(),
@@ -93,6 +130,21 @@ func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 	}
 
 	return event
+}
+
+func (e *Event) CreateEvent(action Action, state State, stateMessage string) Event {
+	return e.NewEvent(GetAction("create"), state, stateMessage)
+}
+
+func (e *Event) UpdateEvent(action Action, state State, stateMessage string) Event {
+	return e.NewEvent(GetAction("update"), state, stateMessage)
+}
+func (e *Event) DeleteEvent(action Action, state State, stateMessage string) Event {
+	return e.NewEvent(GetAction("delete"), state, stateMessage)
+}
+
+func (e *Event) StatusEvent(action Action, state State, stateMessage string) Event {
+	return e.NewEvent(GetAction("status"), state, stateMessage)
 }
 
 func (e *Event) NewEvent(action Action, state State, stateMessage string) Event {
