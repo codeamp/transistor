@@ -95,17 +95,19 @@ func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 	return event
 }
 
-func (e *Event) NewEvent(action Action, payload interface{}) Event {
-	event := NewEvent(e.Name, action, payload)
+func (e *Event) NewEvent(action Action, state State, stateMessage string) Event {
+	event := NewEvent(e.Name, action, e.Payload)
 	event.ParentID = e.ID
-	event.State = State("running")
-	event.StateMessage = fmt.Sprintf("Running event '%s'", e.Name)
+	event.State = state
+	event.StateMessage = stateMessage
 	return event
 }
 
-func (e *Event) SetState(state State, stateMessage string) {
-	e.State = state
-	e.StateMessage = stateMessage
+func (e *Event) OverridePayload(payload interface{}) {
+	e.Payload = payload
+	if payload != nil {
+		e.PayloadModel = reflect.TypeOf(payload).String()
+	}
 }
 
 func (e *Event) Dump() {
