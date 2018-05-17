@@ -95,11 +95,11 @@ func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 	return event
 }
 
-func (e *Event) NewEvent(eventName EventName, action Action, payload interface{}) Event {
-	event := NewEvent(eventName, action, payload)
+func (e *Event) NewEvent(action Action, payload interface{}) Event {
+	event := NewEvent(e.Name, action, payload)
 	event.ParentID = e.ID
 	event.State = State("running")
-	event.StateMessage = fmt.Sprintf("Running event '%s'", eventName)
+	event.StateMessage = fmt.Sprintf("Running event '%s'", e.Name)
 	return event
 }
 
