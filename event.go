@@ -93,15 +93,15 @@ func (a *Artifact) StringSlice() []interface{} {
 	return a.Value.([]interface{})
 }
 
-func CreateEvent(eventName EventName, action Action, payload interface{}) Event {
+func CreateEvent(eventName EventName, payload interface{}) Event {
 	return NewEvent(eventName, GetAction("create"), payload)
 }
 
-func UpdateEvent(eventName EventName, action Action, payload interface{}) Event {
+func UpdateEvent(eventName EventName, payload interface{}) Event {
 	return NewEvent(eventName, GetAction("update"), payload)
 }
 
-func DeleteEvent(eventName EventName, action Action, payload interface{}) Event {
+func DeleteEvent(eventName EventName, payload interface{}) Event {
 	return NewEvent(eventName, GetAction("delete"), payload)
 }
 
