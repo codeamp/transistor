@@ -1,4 +1,5 @@
 # Transistor
+[![CircleCI](https://circleci.com/gh/codeamp/transistor.svg?style=svg)](https://circleci.com/gh/codeamp/transistor)
 
 Transistor allows you to run distributed workload on one or accross multiple hosts. It's a plugin based system that allows plugins to subscribe to multiple events and internal scheduler takes care of delivery. This allows multiple plugins to recieve same message do some work and respond with updated or different message.
 
