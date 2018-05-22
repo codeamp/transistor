@@ -1,4 +1,6 @@
 # Simple logrus wrapper
+[![CircleCI](https://circleci.com/gh/codeamp/logger.svg?style=svg)](https://circleci.com/gh/codeamp/logger)
+
 
 ### Example Usage
 ```
