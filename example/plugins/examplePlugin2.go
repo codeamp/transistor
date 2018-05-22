@@ -41,7 +41,7 @@ func (x *ExamplePlugin2) Subscribe() []string {
 
 func (x *ExamplePlugin2) Process(e transistor.Event) error {
 	if e.Event() == "examplePlugin2:create" {
-		hello := e.Payload.(Hello)
+		hello := e.Payload().(Hello)
 		log.Info("ExamplePlugin2 received a message:", hello)
 	}
 	return nil
