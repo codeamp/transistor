@@ -9,7 +9,7 @@ var EventRegistry = make(map[string]interface{})
 
 func RegisterPlugin(name string, creator Creator, events ...interface{}) {
 	PluginRegistry[name] = creator
-	for i := range events {
+	for _, i := range events {
 		EventRegistry[reflect.TypeOf(i).String()] = i
 	}
 }
