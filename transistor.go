@@ -297,56 +297,10 @@ func (t *Transistor) Stop() {
 	close(t.Shutdown)
 }
 
-type testEventResult struct {
+type testEventResponse struct {
 	Event
 	Error error
 }
-
-// GetTestEvent listens and returns requested event
-// func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Duration) (Event, error) {
-// 	eventName := fmt.Sprintf("%s:%s", name, action)
-
-// 	// timeout in the case that we don't get requested event
-// 	timer := time.NewTimer(time.Second * timeout)
-// 	defer timer.Stop()
-
-// 	responseChan := make(chan testEventResult)
-// 	go func() {
-// 		select {
-// 		case <-timer.C:
-// 			responseChan <- testEventResult{Event{}, fmt.Errorf("Timer expired")}
-// 			return
-// 		}
-// 	}()
-
-// 	go func() {
-// 		for e := range t.TestEvents {
-// 			matched, err := regexp.MatchString(eventName, e.Event())
-// 			if err != nil {
-// 				log.ErrorWithFields("GetTestEvent regex match encountered an error", log.Fields{
-// 					"regex":  name,
-// 					"string": e.Name,
-// 					"error":  err,
-// 				})
-// 			}
-
-// 			if matched {
-// 				log.Warn("***************")
-// 				log.Info("Matched Event")
-// 				log.Warn("***************")
-// 				responseChan <- testEventResult{e, nil}
-// 				return
-// 			}
-
-// 			log.Debug("GetTestEvent regex not matched: %s", name)
-// 		}
-// 	}()
-
-// 	result := <-responseChan
-// 	log.Info(result)
-
-// 	return result.Event, result.Error
-// }
 
 func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Duration) (Event, error) {
 	eventName := fmt.Sprintf("%s:%s", name, action)
@@ -355,7 +309,7 @@ func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Du
 	timer := time.NewTimer(time.Second * timeout)
 	defer timer.Stop()
 
-	responseChan := make(chan testEventResult)
+	responseChan := make(chan (testEventResponse))
 
 	go func() {
 		for {
@@ -369,18 +323,18 @@ func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Du
 						"error":  err,
 					})
 
-					responseChan <- testEventResult{Event{}, err}
+					responseChan <- testEventResponse{Event{}, err}
 					return
 				}
 
 				if matched {
-					responseChan <- testEventResult{e, nil}
+					responseChan <- testEventResponse{e, nil}
 					return
 				}
 
 				log.Warn("TestEvent received but not matched. Found '%s', looking for '%s'", e.Event(), eventName)
 			case <-timer.C:
-				responseChan <- testEventResult{Event{}, fmt.Errorf("Timer expired while waiting for test event (%s)", time.Second*timeout)}
+				responseChan <- testEventResponse{Event{}, fmt.Errorf("Timer expired while waiting for test event (%s)", time.Second*timeout)}
 				return
 			default:
 				time.Sleep(time.Millisecond * 50)
