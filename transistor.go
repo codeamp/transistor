@@ -9,6 +9,7 @@ import (
 
 	log "github.com/codeamp/logger"
 	workers "github.com/jrallison/go-workers"
+	_ "github.com/matryer/runner"
 	"github.com/mitchellh/mapstructure"
 	uuid "github.com/satori/go.uuid"
 )
@@ -296,38 +297,97 @@ func (t *Transistor) Stop() {
 	close(t.Shutdown)
 }
 
+type testEventResult struct {
+	Event
+	Error error
+}
+
 // GetTestEvent listens and returns requested event
-func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Duration) Event {
+// func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Duration) (Event, error) {
+// 	eventName := fmt.Sprintf("%s:%s", name, action)
+
+// 	// timeout in the case that we don't get requested event
+// 	timer := time.NewTimer(time.Second * timeout)
+// 	defer timer.Stop()
+
+// 	responseChan := make(chan testEventResult)
+// 	go func() {
+// 		select {
+// 		case <-timer.C:
+// 			responseChan <- testEventResult{Event{}, fmt.Errorf("Timer expired")}
+// 			return
+// 		}
+// 	}()
+
+// 	go func() {
+// 		for e := range t.TestEvents {
+// 			matched, err := regexp.MatchString(eventName, e.Event())
+// 			if err != nil {
+// 				log.ErrorWithFields("GetTestEvent regex match encountered an error", log.Fields{
+// 					"regex":  name,
+// 					"string": e.Name,
+// 					"error":  err,
+// 				})
+// 			}
+
+// 			if matched {
+// 				log.Warn("***************")
+// 				log.Info("Matched Event")
+// 				log.Warn("***************")
+// 				responseChan <- testEventResult{e, nil}
+// 				return
+// 			}
+
+// 			log.Debug("GetTestEvent regex not matched: %s", name)
+// 		}
+// 	}()
+
+// 	result := <-responseChan
+// 	log.Info(result)
+
+// 	return result.Event, result.Error
+// }
+
+func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Duration) (Event, error) {
 	eventName := fmt.Sprintf("%s:%s", name, action)
+
 	// timeout in the case that we don't get requested event
 	timer := time.NewTimer(time.Second * timeout)
+	defer timer.Stop()
+
+	responseChan := make(chan testEventResult)
+
 	go func() {
-		<-timer.C
-		t.Stop()
-		log.FatalWithFields("Timer expired waiting for event", log.Fields{
-			"event_name": name,
-		})
+		for {
+			select {
+			case e := <-t.TestEvents:
+				matched, err := regexp.MatchString(eventName, e.Event())
+				if err != nil {
+					log.ErrorWithFields("GetTestEvent regex match encountered an error", log.Fields{
+						"regex":  name,
+						"string": e.Name,
+						"error":  err,
+					})
+
+					responseChan <- testEventResult{Event{}, err}
+					return
+				}
+
+				if matched {
+					responseChan <- testEventResult{e, nil}
+					return
+				}
+
+				log.Warn("TestEvent received but not matched. Found '%s', looking for '%s'", e.Event(), eventName)
+			case <-timer.C:
+				responseChan <- testEventResult{Event{}, fmt.Errorf("Timer expired while waiting for test event (%s)", time.Second*timeout)}
+				return
+			default:
+				time.Sleep(time.Millisecond * 50)
+			}
+		}
 	}()
 
-	for e := range t.TestEvents {
-		matched, err := regexp.MatchString(eventName, e.Event())
-		if err != nil {
-			log.ErrorWithFields("GetTestEvent regex match encountered an error", log.Fields{
-				"regex":  name,
-				"string": e.Name,
-				"error":  err,
-			})
-		}
-
-		if matched {
-			timer.Stop()
-			return e
-		}
-	}
-
-	log.WarnWithFields("GetTestEvent regex not matched", log.Fields{
-		"regex": name,
-	})
-
-	return Event{}
+	result := <-responseChan
+	return result.Event, result.Error
 }
