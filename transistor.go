@@ -332,7 +332,7 @@ func (t *Transistor) GetTestEvent(name EventName, action Action, timeout time.Du
 					return
 				}
 
-				log.Debug(fmt.Printf("TestEvent received but not matched. Found '%s', looking for '%s'", e.Event(), eventName))
+				//log.Debug(fmt.Printf("TestEvent received but not matched. Found '%s', looking for '%s'", e.Event(), eventName))
 			case <-timer.C:
 				responseChan <- testEventResponse{Event{}, fmt.Errorf("Timer expired while waiting for test event (%s)", time.Second*timeout)}
 				return
