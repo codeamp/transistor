@@ -9,7 +9,6 @@ import (
 
 	log "github.com/codeamp/logger"
 	workers "github.com/jrallison/go-workers"
-	_ "github.com/matryer/runner"
 	"github.com/mitchellh/mapstructure"
 	uuid "github.com/satori/go.uuid"
 )
