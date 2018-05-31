@@ -28,13 +28,18 @@ jobs:
             set -x
             go build -v ./...
       - run:
-          name: Install Goveralls
+          name: Install Test Dependencies
           command: |
             set -x
             go get -u github.com/mattn/goveralls
+            go get -u golang.org/x/tools/cmd/cover
+            go get -u github.com/rakyll/gotest
       - run:
           name: Run Tests
           command: |
             set -x
-            gotest -v -covermode=count -coverprofile=coverage.out ./...
-            goveralls -coverprofile=coverage.out -service=circle-ci -repotoken ${COVERALLS_TOKEN}
+            gotest -v -covermode=count -coverprofile=coverage.out ./
+
+            if [ -e coverage.out ]; then
+              goveralls -coverprofile=coverage.out -service=circle-ci -repotoken ${COVERALLS_TOKEN}
+            fi
