@@ -32,8 +32,8 @@ jobs:
           command: |
             set -x
             go get -u github.com/mattn/goveralls
-	    go get -u golang.org/x/tools/cmd/cover
-	    go get -u github.com/rakyll/gotest
+            go get -u golang.org/x/tools/cmd/cover
+            go get -u github.com/rakyll/gotest
       - run:
           name: Run Tests
           command: |
