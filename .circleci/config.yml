@@ -38,5 +38,5 @@ jobs:
           name: Run Tests
           command: |
             set -x
-            gotest -v -covermode=count -coverprofile=coverage.out ./...
+            gotest -v -covermode=count -coverprofile=coverage.out ./
             goveralls -coverprofile=coverage.out -service=circle-ci -repotoken ${COVERALLS_TOKEN}
