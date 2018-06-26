@@ -33,8 +33,8 @@ jobs:
             set -x
             go get -u golang.org/x/tools/cmd/cover
             go get -u github.com/rakyll/gotest
-      - run:
-          name: Run Tests
-          command: |
-            set -x
-            gotest -v -covermode=count -coverprofile=coverage.out ./...
+#      - run:
+#          name: Run Tests
+#          command: |
+            #set -x
+            #gotest -v -covermode=count -coverprofile=coverage.out ./...
