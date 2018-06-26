@@ -175,7 +175,7 @@ func (e *Event) SetPayload(payload interface{}) {
 	if payload != nil {
 		e.PayloadModel = reflect.TypeOf(payload).String()
 
-		if _, ok := EventRegistry[e.PayloadModel]; ok {
+		if _, ok := EventRegistry[e.PayloadModel]; ok == false {
 			_, file, line, ok := runtime.Caller(1)
 			if ok {
 				log.Error(fmt.Sprintf("%s : ln %d", file, line))
