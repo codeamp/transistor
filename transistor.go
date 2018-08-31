@@ -123,9 +123,8 @@ func (t *Transistor) addPlugin(name string) error {
 			log.Fatal(fmt.Errorf("PayloadModel not found: %s. Did you add it to ApiRegistry?", event.PayloadModel))
 		}
 
-		//event.Dump()
-
-		plugin.Process(event)
+		workerID := uuid.NewV4()
+		plugin.Process(event, workerID.String())
 	}
 
 	wc := t.Config.Plugins[name].(map[string]interface{})
@@ -198,7 +197,8 @@ func (t *Transistor) flusher() {
 							workers.EnqueueWithOptions(plugin.Name, "Event", e, options)
 						} else {
 							go func() {
-								plugin.Plugin.Process(e)
+								workerID := uuid.NewV4()
+								plugin.Plugin.Process(e, workerID.String())
 							}()
 						}
 					}
