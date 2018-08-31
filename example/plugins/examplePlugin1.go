@@ -38,7 +38,7 @@ func (x *ExamplePlugin1) Subscribe() []string {
 	}
 }
 
-func (x *ExamplePlugin1) Process(e transistor.Event) error {
+func (x *ExamplePlugin1) Process(e transistor.Event, workerID string) error {
 	if e.Event() == "examplePlugin1:create" {
 		hello := e.Payload.(Hello)
 		log.Info("ExamplePlugin1 received a message:", hello)
