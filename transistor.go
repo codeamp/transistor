@@ -123,11 +123,7 @@ func (t *Transistor) addPlugin(name string) error {
 			log.Fatal(fmt.Errorf("PayloadModel not found: %s. Did you add it to ApiRegistry?", event.PayloadModel))
 		}
 
-		//event.Dump()
-
-		//event.Dump()
 		workerID := uuid.NewV4()
-
 		plugin.Process(event, workerID.String())
 	}
 
@@ -202,7 +198,6 @@ func (t *Transistor) flusher() {
 						} else {
 							go func() {
 								workerID := uuid.NewV4()
-
 								plugin.Plugin.Process(e, workerID.String())
 							}()
 						}
