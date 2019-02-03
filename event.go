@@ -39,7 +39,7 @@ func GetAction(s string) Action {
 		errMsg += fmt.Sprintf("%s : ln %d", file, line)
 	}
 
-	log.Panic(errMsg)
+	log.Error(errMsg)
 
 	return Action("unknown")
 }
@@ -143,6 +143,15 @@ func NewEvent(eventName EventName, action Action, payload interface{}) Event {
 
 	event.SetPayload(payload)
 
+	// for debugging purposes
+	_, file, no, ok := runtime.Caller(1)
+	if ok {
+        event.Caller = Caller{
+                File:       file,
+                LineNumber: no,
+        }
+	}
+
 	return event
 }
 
@@ -168,6 +177,16 @@ func (e *Event) NewEvent(action Action, state State, stateMessage string) Event 
 	event.State = state
 	event.Action = action
 	event.StateMessage = stateMessage
+
+	// for debugging purposes
+	_, file, no, ok := runtime.Caller(1)
+	if ok {
+        event.Caller = Caller{
+                File:       file,
+                LineNumber: no,
+        }
+	}
+
 	return event
 }
 

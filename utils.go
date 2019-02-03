@@ -25,7 +25,7 @@ func SliceContains(name string, list []string) bool {
 	for _, b := range list {
 		matched, err := regexp.MatchString(b, name)
 		if err != nil {
-			log.InfoWithFields("SliceContains method encountered an error", log.Fields{
+			log.ErrorWithFields("SliceContains method encountered an error", log.Fields{
 				"regex":  b,
 				"string": name,
 				"error":  err,
@@ -36,15 +36,6 @@ func SliceContains(name string, list []string) bool {
 			return true
 		}
 	}
-
-	// Moved outside of loop as this would return a debug log for every string that doesn't match
-	// regardless of if we found the match in the haystack or not.
-	// This way it only prints a debug if the regex didn't match ALL of the candidates
-	// ADB
-	log.DebugWithFields("SliceContains regex not matched", log.Fields{
-		"string": name,
-		"list":   list,
-	})
 
 	return false
 }
